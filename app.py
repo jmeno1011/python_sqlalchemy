@@ -14,5 +14,5 @@ for instance in db_session.query(LineChart).order_by(LineChart._idLine):
     print(instance)
 
 # select * from linechart where _idLine = 1;
-for instance in db_session.query(LineChart).filter(LineChart._idLine==1):
+for instance in db_session.query(LineChart).filter(LineChart._idLine == 1):
     print(instance)
