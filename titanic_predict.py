@@ -1,3 +1,6 @@
+from overSampling import overSampling_ADASYN, overSampling_Random
+import matplotlib.pyplot as plt
+from tqdm.notebook import tqdm
 from sklearn import tree
 from sklearn.preprocessing import LabelEncoder
 from sklearn.model_selection import train_test_split
@@ -69,3 +72,53 @@ print(clf.get_depth())
 
 # ===>>> 정확도가 0.888 좋게 나오지 않는다.
 # 가지치기랑 데이터 선별하는 것도 필요
+# 가지치기 하기 위해 그래프를 통해 정확도 / 깊이 확인
+
+trainGini = []
+testGini = []
+trainEntropy = []
+testEntropy = []
+
+for k in tqdm(range(1, 22)):
+    # DT으로 train 데이터를 학습 (지니계수 사용)
+    dt = tree.DecisionTreeClassifier(criterion='gini', max_depth=k)
+    dt.fit(X_train, y_train)
+
+    # 정확도 측정
+    trainGini.append(dt.score(X_train, y_train))
+    testGini.append(dt.score(X_test, y_test))
+
+    # DT으로 train 데이터를 학습 (엔트로피 사용)
+    dt = tree.DecisionTreeClassifier(criterion='entropy', max_depth=k)
+    dt.fit(X_train, y_train)
+
+    # 정확도 측정
+    trainEntropy.append(dt.score(X_train, y_train))
+    testEntropy.append(dt.score(X_test, y_test))
+
+plt.figure(figsize=(15, 8))
+plt.plot(trainGini, label='trainGini')
+plt.plot(trainEntropy, label='trainEntropy')
+plt.plot(testGini, label='testGini')
+plt.plot(testEntropy, label='testEntropy')
+plt.legend()
+plt.xlabel('Depth')
+plt.ylabel('Accuracy')
+plt.show()
+
+# 오버샘플링
+# 아래와 같이 오버샘플링후에 fit한다.
+feature_data, target_data = overSampling_ADASYN(feature_data, target_data)
+
+# 의사결정트리 - DecisionTreeClassifier 를 이용함
+clf = tree.DecisionTreeClassifier(random_state=0, max_depth=10)
+# fit은 모델에 맞게 데이터를 넣어서 피팅을 함
+clf = clf.fit(feature_data, target_data)
+
+print("훈련 세트 정확도: {:.3f}".format(clf.score(X_train, y_train)))
+# 훈련 세트 정확도: 0.857
+print("테스트 세트 정확도: {:.3f}".format(clf.score(X_test, y_test)))
+# 테스트 세트 정확도: 0.871
+
+# 정확도 => 0.8612395929694727
+# 17의 깊이와 10의 깊이 차이가 있슴에도 불구하고 정확도 차이는 크게 변하지 않지만 과적합을 줄일 수 있다.
